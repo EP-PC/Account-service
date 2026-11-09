@@ -1,0 +1,7 @@
+CREATE TABLE accounts.accounts (
+    id VARCHAR(36) PRIMARY KEY,
+    name VARCHAR(256) NOT NULL,
+    email VARCHAR(256) NOT NULL UNIQUE,
+    hash_password VARCHAR(256) NOT NULL,
+    role VARCHAR(16) NOT NULL DEFAULT 'USER'
+);
