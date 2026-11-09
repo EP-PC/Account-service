@@ -1,0 +1,30 @@
+name: store
+
+services:
+  db:
+    image: postgres:17
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${DB_USER:-store}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-store}
+      POSTGRES_DB: ${DB_NAME:-store}
+
+  account:
+    build: .
+    ports:
+      - 8080:8080
+    environment:
+      DATABASE_HOST: db
+      DATABASE_PORT: 5432
+      DATABASE_DB: ${DB_NAME:-store}
+      DATABASE_USERNAME: ${DB_USER:-store}
+      DATABASE_PASSWORD: ${DB_PASSWORD:-store}
+      # seed do primeiro ADMIN (lidas do .env local, que nao vai para o Git)
+      ACCOUNT_ADMIN_EMAIL: ${ACCOUNT_ADMIN_EMAIL:-}
+      ACCOUNT_ADMIN_HASH: ${ACCOUNT_ADMIN_HASH:-}
+    depends_on:
+      - db
+
+volumes:
+  db-data:
