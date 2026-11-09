@@ -16,8 +16,13 @@ public class AccountResource implements AccountController {
     @Autowired
     private AccountService accountService;
 
+    // regras da Fase 2 (headers do Gateway); ver AccountAuthorization
+    @Autowired
+    private AccountAuthorization authorization;
+
     @Override
     public ResponseEntity<AccountOut> create(AccountIn in) {
+        authorization.requireInternal();     // so o Auth (register)
         Account created = accountService.create(AccountParser.to(in));
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
             .path("/{id}")
@@ -28,6 +33,7 @@ public class AccountResource implements AccountController {
 
     @Override
     public ResponseEntity<AccountOut> login(AccountIn in) {
+        authorization.requireInternal();     // so o Auth (login)
         if (in == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credentials are required");
         }
@@ -37,11 +43,13 @@ public class AccountResource implements AccountController {
 
     @Override
     public ResponseEntity<List<AccountOut>> findAll() {
+        authorization.requireAdmin();
         return ResponseEntity.ok(AccountParser.to(accountService.findAll()));
     }
 
     @Override
     public ResponseEntity<AccountOut> findById(String id) {
+        authorization.requireOwnerOrAdmin(id);   // interno (Auth /auth/me) tambem passa
         Account account = accountService.findById(id);
         if (account == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found");
@@ -51,6 +59,7 @@ public class AccountResource implements AccountController {
 
     @Override
     public ResponseEntity<Void> delete(String id) {
+        authorization.requireOwnerOrAdmin(id);
         accountService.delete(id);
         return ResponseEntity.noContent().build();
     }
