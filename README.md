@@ -77,6 +77,14 @@ kubectl port-forward svc/account 8081:8080   # http://localhost:8081/accounts/he
 A JVM usa até 50% do limite de memória do container como heap
 (`JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=50`), para não estourar os 512Mi.
 
+**Readiness probe (TCP na 8080):** sem probe, o Kubernetes considera o pod pronto assim que o
+container sobe e, no rollout, derruba o pod antigo na hora; como o Spring leva ~40 s para
+inicializar, a API dava 503 durante o deploy (visto no build #2 do Jenkins). O Tomcat só abre a
+porta 8080 no fim da inicialização, então um `tcpSocket` basta para indicar "pronto", sem
+actuator nem mudança de código. O teste começa aos 20 s e se repete a cada 5 s; enquanto não
+passa, o pod novo fica fora do Service e o antigo segue atendendo. Readiness não reinicia o
+container: com o pod já pronto, 6 falhas seguidas só o tiram do Service até voltar a responder.
+
 ## CI/CD (Jenkins)
 
 Estágios do `Jenkinsfile`:

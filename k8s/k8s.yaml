@@ -18,6 +18,15 @@ spec:
             imagePullPolicy: Always
             ports:
               - containerPort: 8080
+            # "pronto" = porta 8080 aberta. O Tomcat só abre a porta no fim da inicialização do
+            # Spring (~40 s, Flyway incluído), então o probe TCP basta, sem actuator. Sem ele, o
+            # rollout derrubava o pod antigo assim que o novo container subia (503 no deploy).
+            readinessProbe:
+              tcpSocket:
+                port: 8080
+              initialDelaySeconds: 20
+              periodSeconds: 5
+              failureThreshold: 6
             resources:
               requests:
                 memory: "256Mi"
